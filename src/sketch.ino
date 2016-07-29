@@ -1,57 +1,139 @@
 #include <math.h>
-
-#define BLUE_PIN 2
-#define GREEN_PIN 3
-#define YELLOW_PIN 4
-#define RED_PIN 5
-
-#define BLUE pow(2, BLUE_PIN)
-#define GREEN pow(2, GREEN_PIN)
-#define YELLOW pow(2, YELLOW_PIN)
-#define RED pow(2, RED_PIN)
+#include "firefly_structs.h"
 
 #define LED_COUNT 12
-// PORTS:
-//  B (digital pin 8 to 13)
-//  C (analog input pins)
-//  D (digital pins 0 to 7)
+#define ledPin 13
 
-//PORTB = high/low state of digital pins 8-13, 1=high
-//DDRB = Data Direction Register B. read/write state of digital pins 8-13, 1=write (output)
-//PORTD = high/low state of digital pins 0-7, 1=high
-//DDRD = Data Direction Register D. read/write state of digital pins 0-7, 1=write (output)
+class firefly {
 
-byte ledarray[LED_COUNT][2] = {
-    {RED, GREEN},
-    {GREEN, RED},
-    {GREEN, BLUE},
-    {GREEN, YELLOW},
-    {YELLOW, GREEN},
-    {YELLOW, RED},
-    {YELLOW, BLUE},
-    {BLUE, YELLOW},
-    {BLUE, GREEN},
-    {BLUE, RED},
-    {RED, BLUE},
-    {RED, YELLOW},
+    public:
+        firefly(pin_port blue_wire, pin_port green_wire, pin_port yellow_wire, pin_port red_wire)
+        {
+            _lit = false;
+            _position = 0;
+            _brightness = 0;
+            _led_request = {NULL_LED, 0, NULL_LED ,0};
+
+            _ledarray = {
+                {red_wire, green_wire},
+                {green_wire, red_wire},
+                {green_wire, blue_wire},
+                {green_wire, yellow_wire},
+                {yellow_wire, green_wire},
+                {yellow_wire, red_wire},
+                {yellow_wire, blue_wire},
+                {blue_wire, yellow_wire},
+                {blue_wire, green_wire},
+                {blue_wire, red_wire},
+                {red_wire, blue_wire},
+                {red_wire, yellow_wire},
+            };        
+        }
+
+        void update() {
+            if (_lit) {
+                //_position = 50; //(_position + 1) % 100;
+                //_brightness = 100; //= (_brightness - 1) % 100;
+                _position = (_position + 1);
+                if (_position < 100) {
+                    //_brightness = (_brightness + 1) % 100;
+
+                    if(_position < 50) {
+                        _brightness = _position * 2;
+                    } else {
+                        _brightness = (100 - _position) * 2;
+                    }
+                
+                    //invert, so that 0 is the bottom
+                    float position = 100 - _position;
+                    //float position = _position;
+
+                    // adjust brightness
+                    float brightness = sCurvedBrightness(_brightness);
+                    //float brightness = _brightness;
+
+                    // 1) which LEDs do we light?
+                    float virtual_led = float(LED_COUNT-1) * position / 100.0;
+                    int lower_led = int(floor(virtual_led));
+                    int upper_led = int(ceil(virtual_led));
+
+                    // 2) in what proportions (as brightness percentage)?
+                    //assumtion: brightness is additive
+                    float proportion = virtual_led - float(lower_led);
+                    int lower_led_brightness = int(brightness * (1-proportion));
+                    int upper_led_brightness = int(brightness * proportion);
+
+                    // 3) ok, request that
+                    _led_request = {_ledarray[lower_led], lower_led_brightness, _ledarray[upper_led], upper_led_brightness};
+                }
+                else
+                {
+                    // song ends
+                    _lit = false;
+                }
+
+            }
+        }
+
+        void begin_song() {
+            if (_lit == false) {
+                _lit = true;
+                _position = 0;
+                _brightness = 0;
+                _led_request = {NULL_LED, 0, NULL_LED ,0};
+            }
+        }
+
+        request get_led_request() {
+            return _led_request;
+        }
+
+    private:
+        bool _lit;
+        int _position; //percentage
+        int _brightness; //percentage
+        led_wiring _ledarray[LED_COUNT];
+        request _led_request;
 };
 
-const unsigned int PWM_LEVELS = 100; // also us in duty cycle
 
-void turnOn( int led ) {
-    DDRD = ledarray[led][0] | ledarray[led][1];
-    PORTD = ledarray[led][0]; //colour on +ve led sides
+void turnOn( led_wiring led ) {
+    DDRB = DDRB | led.from.portB | led.to.portB;
+    PORTB = PORTB | led.from.portB;
+    DDRC = DDRC | led.from.portC | led.to.portC;
+    PORTC = PORTC | led.from.portC;
+    DDRD = DDRD | led.from.portD | led.to.portD;
+    PORTD = PORTD | led.from.portD;
 }
 
 void turnOff() {
+    DDRB = 0;
+    PORTB = 0;
+    DDRC = 0;
+    PORTC = 0;
     DDRD = 0;
     PORTD = 0;
 }
 
+#define NUM_FIREFLIES 2
+firefly fireflies[NUM_FIREFLIES] = {firefly(pin_2, pin_3, pin_4, pin_5),
+                                    firefly(pin_6, pin_7, pin_8, pin_9)};
+
 void setup() {
     turnOff();
-}
+    pinMode(ledPin, OUTPUT);
+    // initialize timer1 
+    noInterrupts();           // disable all interrupts
+    TCCR1A = 0;
+    TCCR1B = 0;
+    TCNT1  = 0; //actual timer value
 
+    OCR1A = 6; //625;            // compare match register 16MHz/256/100Hz
+    TCCR1B |= (1 << WGM12);   // CTC mode (clear timer when it matches)
+    TCCR1B |= (1 << CS12);    // 256 prescaler 
+    TIMSK1 |= (1 << OCIE1A);  // enable timer compare interrupt
+    interrupts();             // enable all interrupts
+}
 int sCurvedBrightness(int brightness)
 {
     // Convert brightness on an S-curve
@@ -67,50 +149,53 @@ int sCurvedBrightness(int brightness)
     return int(s * 100.0);
 }
 
-void show(int position, int brightness, long ms_duration) {
-    //position is % of bug, with 0 at the bottom
-    //brightness is % of max brightness
+request led_requests[NUM_FIREFLIES];
 
-    //invert, so that 0 is the bottom
-    position = 100-position;
-
-    // adjust brightness
-    brightness = sCurvedBrightness(brightness);
-
-    // 1) which LEDs do we light?
-    float virtual_led = float(LED_COUNT-1) * float(position) / 100.0;
-    int lower_led = int(floor(virtual_led));
-    int upper_led = int(ceil(virtual_led));
-
-    // 2) in what proportions (as brightness percentage)?
-    //assumtion: brightness is additive
-    float proportion = virtual_led - float(lower_led);
-    int lower_led_brightness = int(float(brightness) * (1-proportion));
-    int upper_led_brightness = int(float(brightness) * proportion);
-
-    // 3) ok, do that using PWM...
-    long us_duration = ms_duration * 1000;
-    long pulses = us_duration / PWM_LEVELS;
-   
-    for (long pulse=0; pulse<=pulses; pulse++){
-        //do one pulse
-        turnOn(lower_led);
-        delayMicroseconds(lower_led_brightness+1); //can't delay by 0us :/
-        turnOn(upper_led);
-        delayMicroseconds(upper_led_brightness+1);
-        turnOff();
-        delayMicroseconds(100-lower_led_brightness-upper_led_brightness+1);
-    }
-}
 
 void loop() {
-    for(int position=0; position<50; position++)
-    {
-        show(position, position*2, 5);
+    int chance = random(200);
+    if (chance == 0) {
+        int firefly = random(NUM_FIREFLIES);
+        fireflies[firefly].begin_song();
     }
-    for(int position=0; position<50; position++)
-    {
-        show(position+50, (50-position)*2, 5);
+
+    // keep count of lit bigs
+    // if >2 are lit, randomly choose whether to light a random firefly
+    
+    // tell each firefly to update song
+    // collect requests from fireflies
+
+    for(int i=0; i<NUM_FIREFLIES; i++) {
+        fireflies[i].update();
+        led_requests[i] = fireflies[i].get_led_request();
     }
-    delay(1000);
+
+    
+    // wait
+    delay(5); //milliseconds. loads of time to service ISRs probably
+
+}
+
+
+volatile int duty_cycle = 0;
+
+ISR(TIMER1_COMPA_vect)          // timer compare interrupt service routine
+{
+    duty_cycle = (duty_cycle + 1) % 100;
+
+    turnOff();
+
+    for(int i=0; i<NUM_FIREFLIES; i++) {
+        request r = led_requests[i];
+        if (duty_cycle < r.led1_brightness) {
+            turnOn(r.led1_wiring);
+            
+        }
+        else if (duty_cycle < r.led2_brightness + r.led1_brightness) {
+            turnOn(r.led2_wiring);
+        }
+    }
+
+    
+ //digitalWrite(ledPin, digitalRead(ledPin) ^ 1);   // toggle LED pin
 }
