@@ -1,144 +1,33 @@
 #include <math.h>
 #include "firefly_structs.h"
+#include "firefly.h"
 
-#define LED_COUNT 12
 #define ledPin 13
 
-class Firefly {
-/*
-Represents one hardware firefly with LED_COUNT LEDs.
-*/
-    public:
-        Firefly(pin_port blue_wire, pin_port green_wire, pin_port yellow_wire, pin_port red_wire)
-        {
-            _lit = false;
-            _position = 0;
-            _brightness = 0;
-            _led_request = {NULL_LED, 0, NULL_LED ,0};
-
-            _led_wirings = {
-                {red_wire, green_wire},
-                {green_wire, red_wire},
-                {green_wire, blue_wire},
-                {green_wire, yellow_wire},
-                {yellow_wire, green_wire},
-                {yellow_wire, red_wire},
-                {yellow_wire, blue_wire},
-                {blue_wire, yellow_wire},
-                {blue_wire, green_wire},
-                {blue_wire, red_wire},
-                {red_wire, blue_wire},
-                {red_wire, yellow_wire},
-            };        
-        }
-
-        void update() {
-            if (_lit) {
-                //_position = 50; //(_position + 1) % 100;
-                //_brightness = 100; //= (_brightness - 1) % 100;
-                _position = (_position + 1);
-                if (_position < 100) {
-                    //_brightness = (_brightness + 1) % 100;
-
-                    if(_position < 50) {
-                        _brightness = _position * 2;
-                    } else {
-                        _brightness = (100 - _position) * 2;
-                    }
-                
-                    //invert, so that 0 is the bottom
-                    float position = 100 - _position;
-                    //float position = _position;
-
-                    // adjust brightness
-                    //float brightness = convert_brightness(_brightness);
-                    float brightness = _brightness;
-
-                    // 1) which LEDs do we light?
-                    float virtual_led = float(LED_COUNT-1) * position / 100.0;
-                    int lower_led = int(floor(virtual_led));
-                    int upper_led = int(ceil(virtual_led));
-
-                    // 2) in what proportions (as brightness percentage)?
-                    //assumtion: brightness is additive
-                    float proportion = virtual_led - float(lower_led);
-                    int lower_led_brightness = int(brightness * (1-proportion));
-                    int upper_led_brightness = int(brightness * proportion);
-
-                    // 3) ok, request that
-                    _led_request = {_led_wirings[lower_led], lower_led_brightness, _led_wirings[upper_led], upper_led_brightness};
-                }
-                else
-                {
-                    // song ends
-                    _lit = false;
-                    _led_request = {NULL_LED, 0, NULL_LED ,0};
-                }
-
-            }
-        }
-
-        void begin_song() {
-            if (_lit == false) {
-                _lit = true;
-                _position = 0;
-                _brightness = 0;
-                _led_request = {NULL_LED, 0, NULL_LED ,0};
-            }
-        }
-
-        request get_led_request() {
-            return _led_request;
-        }
-
-    private:
-        bool _lit;
-        int _position; //percentage
-        int _brightness; //percentage
-        led_wiring _led_wirings[LED_COUNT];
-        request _led_request;
-};
-
-
-void turn_on( led_wiring led ) {
-    DDRB = DDRB | led.from.portB | led.to.portB;
-    PORTB = PORTB | led.from.portB;
-    DDRC = DDRC | led.from.portC | led.to.portC;
-    PORTC = PORTC | led.from.portC;
-    DDRD = DDRD | led.from.portD | led.to.portD;
-    PORTD = PORTD | led.from.portD;
-}
-
-void turn_off() {
-    DDRB = 0;
-    PORTB = 0;
-    DDRC = 0;
-    PORTC = 0;
-    DDRD = 0;
-    PORTD = 0;
-}
+pin_port pin_2  = {0,0,0b00000100};
+pin_port pin_3  = {0,0,0b00001000};
+pin_port pin_4  = {0,0,0b00010000};
+pin_port pin_5  = {0,0,0b00100000};
+pin_port pin_6  = {0,0,0b01000000};
+pin_port pin_7  = {0,0,0b10000000};
+pin_port pin_8  = {0b00000001,0,0};
+pin_port pin_9  = {0b00000010,0,0};
+pin_port pin_10 = {0b00000100,0,0};
+pin_port pin_11 = {0b00001000,0,0};
+pin_port pin_12 = {0b00010000,0,0};
+pin_port pin_13 = {0b00100000,0,0};
+pin_port pin_A0 = {0,0b00000001,0};
+pin_port pin_A1 = {0,0b00000010,0};
+pin_port pin_A2 = {0,0b00000100,0};
+pin_port pin_A3 = {0,0b00001000,0};
+pin_port pin_A4 = {0,0b00010000,0};
+pin_port pin_A5 = {0,0b00100000,0};
 
 #define NUM_FIREFLIES 3
 Firefly fireflies[NUM_FIREFLIES] = {Firefly(pin_2, pin_3, pin_4, pin_5),
                                     Firefly(pin_6, pin_7, pin_8, pin_9),
                                     Firefly(pin_10, pin_11, pin_12, pin_A0)};
 
-
-
-int convert_brightness(int brightness)
-{
-    // Convert brightness on an S-curve
-    // https://en.wikipedia.org/wiki/Sigmoid_function
-    
-    // Sigmoid function: S(t) = 1/(1 + e^-t)
-    // Domain: -6ish to 6ish
-    // Range: 0 to 1
-    float e = 2.718;
-    float stretch = 2.0; //how much of the curve to use. Increase for more contrast
-    float t = (brightness - 50) / 50.0 * (e * stretch);
-    float s = 1.0 / (1.0 + pow(e, -t));
-    return int(s * 100.0);
-}
 
 void setup() {
     turn_off();
@@ -202,4 +91,22 @@ ISR(TIMER1_COMPA_vect)          // timer compare interrupt service routine
         }
     }
     //digitalWrite(ledPin, digitalRead(ledPin) ^ 1);   // toggle LED pin
+}
+
+void turn_on( led_wiring led ) {
+    DDRB = DDRB | led.from.portB | led.to.portB;
+    PORTB = PORTB | led.from.portB;
+    DDRC = DDRC | led.from.portC | led.to.portC;
+    PORTC = PORTC | led.from.portC;
+    DDRD = DDRD | led.from.portD | led.to.portD;
+    PORTD = PORTD | led.from.portD;
+}
+
+void turn_off() {
+    DDRB = 0;
+    PORTB = 0;
+    DDRC = 0;
+    PORTC = 0;
+    DDRD = 0;
+    PORTD = 0;
 }
