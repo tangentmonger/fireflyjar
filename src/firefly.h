@@ -3,6 +3,7 @@
 #include "firefly_structs.h"
 
 #define LED_COUNT 12
+#define MAX_TIREDNESS 200
 
 class Firefly {
 /*
@@ -19,6 +20,7 @@ Represents one hardware firefly with LED_COUNT LEDs.
         bool _lit;
         int _position; //percentage
         int _brightness; //percentage
+        int _tiredness;
         led_wiring _led_wirings[LED_COUNT];
         request _led_request;
         int _convert_brightness(int brightness);

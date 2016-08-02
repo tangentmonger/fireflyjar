@@ -64,14 +64,19 @@ void Firefly::update() {
         {
             // song ends
             _lit = false;
+            _tiredness = MAX_TIREDNESS;
             _led_request = {NULL_LED, 0, NULL_LED ,0};
         }
 
     }
+    else if (_tiredness > 0)
+    {
+       _tiredness--; 
+    }
 }
 
 void Firefly::begin_song() {
-    if (_lit == false) {
+    if (_lit == false && _tiredness == 0) {
         _lit = true;
         _position = 0;
         _brightness = 0;
