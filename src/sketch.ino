@@ -4,17 +4,19 @@
 #define LED_COUNT 12
 #define ledPin 13
 
-class firefly {
-
+class Firefly {
+/*
+Represents one hardware firefly with LED_COUNT LEDs.
+*/
     public:
-        firefly(pin_port blue_wire, pin_port green_wire, pin_port yellow_wire, pin_port red_wire)
+        Firefly(pin_port blue_wire, pin_port green_wire, pin_port yellow_wire, pin_port red_wire)
         {
             _lit = false;
             _position = 0;
             _brightness = 0;
             _led_request = {NULL_LED, 0, NULL_LED ,0};
 
-            _ledarray = {
+            _led_wirings = {
                 {red_wire, green_wire},
                 {green_wire, red_wire},
                 {green_wire, blue_wire},
@@ -49,8 +51,8 @@ class firefly {
                     //float position = _position;
 
                     // adjust brightness
-                    float brightness = sCurvedBrightness(_brightness);
-                    //float brightness = _brightness;
+                    //float brightness = convert_brightness(_brightness);
+                    float brightness = _brightness;
 
                     // 1) which LEDs do we light?
                     float virtual_led = float(LED_COUNT-1) * position / 100.0;
@@ -64,12 +66,13 @@ class firefly {
                     int upper_led_brightness = int(brightness * proportion);
 
                     // 3) ok, request that
-                    _led_request = {_ledarray[lower_led], lower_led_brightness, _ledarray[upper_led], upper_led_brightness};
+                    _led_request = {_led_wirings[lower_led], lower_led_brightness, _led_wirings[upper_led], upper_led_brightness};
                 }
                 else
                 {
                     // song ends
                     _lit = false;
+                    _led_request = {NULL_LED, 0, NULL_LED ,0};
                 }
 
             }
@@ -92,12 +95,12 @@ class firefly {
         bool _lit;
         int _position; //percentage
         int _brightness; //percentage
-        led_wiring _ledarray[LED_COUNT];
+        led_wiring _led_wirings[LED_COUNT];
         request _led_request;
 };
 
 
-void turnOn( led_wiring led ) {
+void turn_on( led_wiring led ) {
     DDRB = DDRB | led.from.portB | led.to.portB;
     PORTB = PORTB | led.from.portB;
     DDRC = DDRC | led.from.portC | led.to.portC;
@@ -106,7 +109,7 @@ void turnOn( led_wiring led ) {
     PORTD = PORTD | led.from.portD;
 }
 
-void turnOff() {
+void turn_off() {
     DDRB = 0;
     PORTB = 0;
     DDRC = 0;
@@ -115,13 +118,31 @@ void turnOff() {
     PORTD = 0;
 }
 
-#define NUM_FIREFLIES 2
-firefly fireflies[NUM_FIREFLIES] = {firefly(pin_2, pin_3, pin_4, pin_5),
-                                    firefly(pin_6, pin_7, pin_8, pin_9)};
+#define NUM_FIREFLIES 3
+Firefly fireflies[NUM_FIREFLIES] = {Firefly(pin_2, pin_3, pin_4, pin_5),
+                                    Firefly(pin_6, pin_7, pin_8, pin_9),
+                                    Firefly(pin_10, pin_11, pin_12, pin_A0)};
+
+
+
+int convert_brightness(int brightness)
+{
+    // Convert brightness on an S-curve
+    // https://en.wikipedia.org/wiki/Sigmoid_function
+    
+    // Sigmoid function: S(t) = 1/(1 + e^-t)
+    // Domain: -6ish to 6ish
+    // Range: 0 to 1
+    float e = 2.718;
+    float stretch = 2.0; //how much of the curve to use. Increase for more contrast
+    float t = (brightness - 50) / 50.0 * (e * stretch);
+    float s = 1.0 / (1.0 + pow(e, -t));
+    return int(s * 100.0);
+}
 
 void setup() {
-    turnOff();
-    pinMode(ledPin, OUTPUT);
+    turn_off();
+    //pinMode(ledPin, OUTPUT);
     // initialize timer1 
     noInterrupts();           // disable all interrupts
     TCCR1A = 0;
@@ -134,29 +155,14 @@ void setup() {
     TIMSK1 |= (1 << OCIE1A);  // enable timer compare interrupt
     interrupts();             // enable all interrupts
 }
-int sCurvedBrightness(int brightness)
-{
-    // Convert brightness on an S-curve
-    // https://en.wikipedia.org/wiki/Sigmoid_function
-    
-    // Sigmoid function: S(t) = 1/(1 + e^-t)
-    // Domain: -6ish to 6ish
-    // Range: 0 to 1
-    float e = 2.718;
-    float stretch = 2.5; //how much of the curve to use. Increase for more contrast
-    float t = (brightness - 50) / 50.0 * (e*stretch);
-    float s = 1.0 / (1.0 + pow(e,-t));
-    return int(s * 100.0);
-}
 
 request led_requests[NUM_FIREFLIES];
-
 
 void loop() {
     int chance = random(200);
     if (chance == 0) {
-        int firefly = random(NUM_FIREFLIES);
-        fireflies[firefly].begin_song();
+        int selected_firefly = random(NUM_FIREFLIES);
+        fireflies[selected_firefly].begin_song();
     }
 
     // keep count of lit bigs
@@ -183,19 +189,17 @@ ISR(TIMER1_COMPA_vect)          // timer compare interrupt service routine
 {
     duty_cycle = (duty_cycle + 1) % 100;
 
-    turnOff();
+    turn_off();
 
     for(int i=0; i<NUM_FIREFLIES; i++) {
         request r = led_requests[i];
         if (duty_cycle < r.led1_brightness) {
-            turnOn(r.led1_wiring);
+            turn_on(r.led1_wiring);
             
         }
         else if (duty_cycle < r.led2_brightness + r.led1_brightness) {
-            turnOn(r.led2_wiring);
+            turn_on(r.led2_wiring);
         }
     }
-
-    
- //digitalWrite(ledPin, digitalRead(ledPin) ^ 1);   // toggle LED pin
+    //digitalWrite(ledPin, digitalRead(ledPin) ^ 1);   // toggle LED pin
 }
