@@ -4,6 +4,8 @@
 
 #define ledPin 13
 
+pin_port pin_0  = {0,0,0b00000001}; //tx
+pin_port pin_1  = {0,0,0b00000010}; //rx
 pin_port pin_2  = {0,0,0b00000100};
 pin_port pin_3  = {0,0,0b00001000};
 pin_port pin_4  = {0,0,0b00010000};
@@ -22,11 +24,18 @@ pin_port pin_A2 = {0,0b00000100,0};
 pin_port pin_A3 = {0,0b00001000,0};
 pin_port pin_A4 = {0,0b00010000,0};
 pin_port pin_A5 = {0,0b00100000,0};
+// A6 and A7 cannot be used as digital outputs
+// pin_port pin_A6 = {0,0b01000000,0};
+// pin_port pin_A7 = {0,0b10000000,0};
 
-#define NUM_FIREFLIES 3
-Firefly fireflies[NUM_FIREFLIES] = {Firefly(pin_2, pin_3, pin_4, pin_5),
-                                    Firefly(pin_6, pin_7, pin_8, pin_9),
-                                    Firefly(pin_10, pin_11, pin_12, pin_A0)};
+#define NUM_FIREFLIES 5
+
+//                                          blue, green, yellow, red 
+Firefly fireflies[NUM_FIREFLIES] = {Firefly(pin_0, pin_1, pin_2, pin_3),
+                                    Firefly(pin_4, pin_5, pin_6, pin_7),
+                                    Firefly(pin_8, pin_9, pin_10, pin_11),
+                                    Firefly(pin_12, pin_13, pin_A0, pin_A1),
+                                    Firefly(pin_A2, pin_A3, pin_A4, pin_A5)};
 
 
 void setup() {
