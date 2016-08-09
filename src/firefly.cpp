@@ -3,6 +3,8 @@
 
 Firefly::Firefly(pin_port blue_wire, pin_port green_wire, pin_port yellow_wire, pin_port red_wire)
 {
+    // Represents one firefly with 12 LEDs. Controls its song and builds requests for
+    // LEDs to be lit.
     _lit = false;
     _position = 0;
     _brightness = 0;
@@ -25,22 +27,21 @@ Firefly::Firefly(pin_port blue_wire, pin_port green_wire, pin_port yellow_wire, 
 }
 
 void Firefly::update() {
+    // Called regularly to allow firefly to update its current LED pattern.
     if (_lit) {
-        //_position = 50; //(_position + 1) % 100;
-        //_brightness = 100; //= (_brightness - 1) % 100;
+        // Firefly is lit, so update position and brightness
         _position = (_position + 1);
         if (_position < 100) {
-            //_brightness = (_brightness + 1) % 100;
-
             if(_position < 50) {
+                // First half fades in to full brightness...
                 _brightness = _position * 2;
             } else {
+                // ... second half fades out again
                 _brightness = (100 - _position) * 2;
             }
 
             //invert, so that 0 is the bottom
             float position = 100 - _position;
-            //float position = _position;
 
             // adjust brightness
             //float brightness = _convert_brightness(_brightness);
@@ -62,7 +63,8 @@ void Firefly::update() {
         }
         else
         {
-            // song ends
+            // end the song and put firefly in a "tired" state so it won't
+            // sing again for a while
             _lit = false;
             _tiredness = MAX_TIREDNESS;
             _led_request = {NULL_LED, 0, NULL_LED ,0};
@@ -71,11 +73,13 @@ void Firefly::update() {
     }
     else if (_tiredness > 0)
     {
+        // firefly is in a "tired" state, so reduce tiredness
        _tiredness--; 
     }
 }
 
 void Firefly::begin_song() {
+    // if firefly is off and rested, begin a song
     if (_lit == false && _tiredness == 0) {
         _lit = true;
         _position = 0;
@@ -85,6 +89,7 @@ void Firefly::begin_song() {
 }
 
 request Firefly::get_led_request() {
+    // getter
     return _led_request;
 }
 
@@ -102,12 +107,3 @@ int Firefly::_convert_brightness(int brightness)
     float s = 1.0 / (1.0 + pow(e, -t));
     return int(s * 100.0);
 }
-
-
-//  bool Firefly::_lit;
-//  int Firefly::_position; //percentage
-//  int Firefly::_brightness; //percentage
-//  led_wiring Firefly::_led_wirings[LED_COUNT];
-//  request Firefly::_led_request;
-
-
