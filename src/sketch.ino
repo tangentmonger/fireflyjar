@@ -23,8 +23,9 @@ pin_port pin_A3 = {0,0b00001000,0};
 pin_port pin_A4 = {0,0b00010000,0};
 pin_port pin_A5 = {0,0b00100000,0};
 // A6 and A7 cannot be used as digital outputs
-// pin_port pin_A6 = {0,0b01000000,0};
-// pin_port pin_A7 = {0,0b10000000,0};
+
+int knock_sensor = A6; // piezo sensor with large resistor in parallel
+int KNOCK_THRESHOLD = 100;
 
 #define NUM_FIREFLIES 5
 
@@ -56,11 +57,22 @@ void setup() {
 request led_requests[NUM_FIREFLIES];
 
 void loop() {
-    int chance = random(200);
-    if (chance == 0) {
-        // attempt to start a song on a random firefly
-        int selected_firefly = random(NUM_FIREFLIES);
-        fireflies[selected_firefly].begin_song();
+
+    byte knock_value = analogRead(knock_sensor);
+    if (knock_value > KNOCK_THRESHOLD) {
+        // detected a knock on the jar which frightens all fireflies
+        // into flying at once
+        for(int i=0; i<NUM_FIREFLIES; i++) {
+            fireflies[i].frighten();
+        }
+    }
+    else {
+        int chance = random(200);
+        if (chance == 0) {
+            // attempt to start a song on a random firefly
+            int selected_firefly = random(NUM_FIREFLIES);
+            fireflies[selected_firefly].begin_song();
+        }
     }
 
     // collect LED PWM requests for all fireflies

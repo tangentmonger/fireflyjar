@@ -63,10 +63,9 @@ void Firefly::update() {
         }
         else
         {
-            // end the song and put firefly in a "tired" state so it won't
+            // end the song, leaving firefly in a "tired" state so it won't
             // sing again for a while
             _lit = false;
-            _tiredness = MAX_TIREDNESS;
             _led_request = {NULL_LED, 0, NULL_LED ,0};
         }
 
@@ -85,6 +84,18 @@ void Firefly::begin_song() {
         _position = 0;
         _brightness = 0;
         _led_request = {NULL_LED, 0, NULL_LED ,0};
+        _tiredness = STANDARD_MAX_TIREDNESS;
+    }
+}
+
+void Firefly::frighten() {
+    // if firefly is off, begin a song (even if tired)
+    if (_lit == false) {
+        _lit = true;
+        _position = 0;
+        _brightness = 0;
+        _led_request = {NULL_LED, 0, NULL_LED ,0};
+        _tiredness = FRIGHTENED_MAX_TIREDNESS;
     }
 }
 

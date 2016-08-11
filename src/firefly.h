@@ -3,7 +3,8 @@
 #include "firefly_structs.h"
 
 #define LED_COUNT 12
-#define MAX_TIREDNESS 200
+#define STANDARD_MAX_TIREDNESS 200
+#define FRIGHTENED_MAX_TIREDNESS 800
 
 class Firefly {
 /*
@@ -18,6 +19,9 @@ Represents one hardware firefly with LED_COUNT LEDs.
 
         // Begin a song, if the firefly is able to
         void begin_song();
+
+        // Frighten firefly (begin song even if tired)
+        void frighten();
 
         // Getter for requested LED state
         request get_led_request();
