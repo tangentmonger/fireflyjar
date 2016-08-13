@@ -27,13 +27,13 @@ Represents one hardware firefly with LED_COUNT LEDs.
         request get_led_request();
 
     private:
-        bool _lit; // is the firefly currently lit?
         int _position; // lit "point", from the bottom (0) to the top (100)
         int _brightness; // brightness of lit "point" as a percentage
         int _tiredness; // singing makes the firefly tired and unable to sing again for a while
         led_wiring _led_wirings[LED_COUNT]; // pin connections for each LED
         request _led_request; // current requested LED state
         int _convert_brightness(int brightness); // S-curve brightness correction
+        int _state; // current state of firefly
 };
 #endif
 

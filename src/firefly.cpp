@@ -1,14 +1,26 @@
 #include "firefly.h"
 #include <math.h>
 
+// State machine. Start in a ready state. Firefly becomes tired after a "song"
+// (i.e. after lighting up) and won't sing again until rested, unless
+// frightened by a tap on the jar. Firefly becomes exhausted after being
+// frightened, and won't sing or react to taps again until rested for a longer
+// period. Return to ready state after resting.
+
+#define STATE_READY 0
+#define STATE_SINGING 1
+#define STATE_TIRED 2
+#define STATE_FRIGHTENED 3
+#define STATE_EXHAUSTED 4
+
 Firefly::Firefly(pin_port blue_wire, pin_port green_wire, pin_port yellow_wire, pin_port red_wire)
 {
     // Represents one firefly with 12 LEDs. Controls its song and builds requests for
     // LEDs to be lit.
-    _lit = false;
     _position = 0;
     _brightness = 0;
     _led_request = {NULL_LED, 0, NULL_LED ,0};
+    _state = STATE_READY;
 
     _led_wirings = {
         {red_wire, green_wire},
@@ -28,7 +40,7 @@ Firefly::Firefly(pin_port blue_wire, pin_port green_wire, pin_port yellow_wire, 
 
 void Firefly::update() {
     // Called regularly to allow firefly to update its current LED pattern.
-    if (_lit) {
+    if (_state == STATE_SINGING || _state == STATE_FRIGHTENED) {
         // Firefly is lit, so update position and brightness
         _position = (_position + 1);
         if (_position < 100) {
@@ -65,22 +77,29 @@ void Firefly::update() {
         {
             // end the song, leaving firefly in a "tired" state so it won't
             // sing again for a while
-            _lit = false;
+            if (_state == STATE_SINGING) {
+                _state = STATE_TIRED;
+            } else {
+                _state = STATE_EXHAUSTED;
+            }
             _led_request = {NULL_LED, 0, NULL_LED ,0};
         }
 
     }
-    else if (_tiredness > 0)
+    else if (_state == STATE_TIRED || _state == STATE_EXHAUSTED)
     {
         // firefly is in a "tired" state, so reduce tiredness
-       _tiredness--; 
+        _tiredness--; 
+        if (_tiredness == 0){
+            _state = STATE_READY;
+        }
     }
 }
 
 void Firefly::begin_song() {
     // if firefly is off and rested, begin a song
-    if (_lit == false && _tiredness == 0) {
-        _lit = true;
+    if (_state == STATE_READY) {
+        _state = STATE_SINGING;
         _position = 0;
         _brightness = 0;
         _led_request = {NULL_LED, 0, NULL_LED ,0};
@@ -90,8 +109,8 @@ void Firefly::begin_song() {
 
 void Firefly::frighten() {
     // if firefly is off, begin a song (even if tired)
-    if (_lit == false) {
-        _lit = true;
+    if (_state == STATE_READY || _state == STATE_TIRED) {
+        _state = STATE_FRIGHTENED;
         _position = 0;
         _brightness = 0;
         _led_request = {NULL_LED, 0, NULL_LED ,0};
