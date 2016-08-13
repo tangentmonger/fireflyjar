@@ -3,15 +3,17 @@
 
 // State machine. Start in a ready state. Firefly becomes tired after a "song"
 // (i.e. after lighting up) and won't sing again until rested, unless
-// frightened by a tap on the jar. Firefly becomes exhausted after being
-// frightened, and won't sing or react to taps again until rested for a longer
-// period. Return to ready state after resting.
+// frightened by a tap on the jar. There is a brief hesitation before becoming
+// frightened.Firefly becomes exhausted after being frightened, and won't sing
+// or react to taps again until rested for a longer period. Return to ready
+// state after resting.
 
 #define STATE_READY 0
 #define STATE_SINGING 1
 #define STATE_TIRED 2
 #define STATE_FRIGHTENED 3
 #define STATE_EXHAUSTED 4
+#define STATE_HESITATING 5
 
 Firefly::Firefly(pin_port blue_wire, pin_port green_wire, pin_port yellow_wire, pin_port red_wire)
 {
@@ -94,6 +96,17 @@ void Firefly::update() {
             _state = STATE_READY;
         }
     }
+    else if (_state == STATE_HESITATING)
+    {
+        _hesitation--;
+        if (_hesitation == 0){
+            _state = STATE_FRIGHTENED;
+            _position = 0;
+            _brightness = 0;
+            _led_request = {NULL_LED, 0, NULL_LED ,0};
+            _tiredness = FRIGHTENED_MAX_TIREDNESS;
+        }
+    }
 }
 
 void Firefly::begin_song() {
@@ -110,12 +123,9 @@ void Firefly::begin_song() {
 void Firefly::frighten() {
     // if firefly is off, begin a song (even if tired)
     if (_state == STATE_READY || _state == STATE_TIRED) {
-        _state = STATE_FRIGHTENED;
-        _position = 0;
-        _brightness = 0;
-        _led_request = {NULL_LED, 0, NULL_LED ,0};
-        _tiredness = FRIGHTENED_MAX_TIREDNESS;
-    }
+        _state = STATE_HESITATING;
+        _hesitation = random(MAX_HESITATION) + 1; // never zero
+    }    
 }
 
 request Firefly::get_led_request() {
