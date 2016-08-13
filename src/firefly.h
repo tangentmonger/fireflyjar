@@ -3,8 +3,9 @@
 #include "firefly_structs.h"
 
 #define LED_COUNT 12
-#define STANDARD_MAX_TIREDNESS 200
-#define FRIGHTENED_MAX_TIREDNESS 800
+#define STANDARD_MAX_TIREDNESS 200 //in cycles of 5ms each
+#define FRIGHTENED_MAX_TIREDNESS 800 //in cycles of 5ms each
+#define MAX_HESITATION 50 // in cycles of 5ms each
 
 class Firefly {
 /*
@@ -34,6 +35,7 @@ Represents one hardware firefly with LED_COUNT LEDs.
         request _led_request; // current requested LED state
         int _convert_brightness(int brightness); // S-curve brightness correction
         int _state; // current state of firefly
+        int _hesitation; // short random delay before flying away
 };
 #endif
 
