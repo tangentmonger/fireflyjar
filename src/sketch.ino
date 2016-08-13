@@ -2,8 +2,10 @@
 #include "firefly_structs.h"
 #include "firefly.h"
 
-pin_port pin_0  = {0,0,0b00000001}; //tx. Misprinted on Pro Mini clone
-pin_port pin_1  = {0,0,0b00000010}; //rx. Misprinted on Pro Mini clone
+// Note: rx/tx hardware and charlieplexing are incompatible!
+// Disconnect one before using the other.
+pin_port pin_rx  = {0,0,0b00000001}; //Pro Mini: "RX1", Nano: "RX0"
+pin_port pin_tx  = {0,0,0b00000010}; //Pro Mini: "TX0", Nano: "TX1"
 pin_port pin_2  = {0,0,0b00000100};
 pin_port pin_3  = {0,0,0b00001000};
 pin_port pin_4  = {0,0,0b00010000};
@@ -30,7 +32,7 @@ int KNOCK_THRESHOLD = 100;
 #define NUM_FIREFLIES 5
 
 //                                          blue, green, yellow, red 
-Firefly fireflies[NUM_FIREFLIES] = {Firefly(pin_0, pin_1, pin_2, pin_3),
+Firefly fireflies[NUM_FIREFLIES] = {Firefly(pin_tx, pin_rx, pin_2, pin_3),
                                     Firefly(pin_4, pin_5, pin_6, pin_7),
                                     Firefly(pin_8, pin_9, pin_10, pin_11),
                                     Firefly(pin_12, pin_13, pin_A0, pin_A1),
