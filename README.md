@@ -8,3 +8,5 @@ Video
 [![Jar of Fireflies](https://i.vimeocdn.com/video/594512665.jpg)](https://vimeo.com/184925080)
 
 Each firefly consists of twelve green SMD LEDs, Charlieplexed on four thin enamelled wires and controlled by an Arduino Nano. A piezo sensor in the lid detects taps.
+
+![Firefly detail](images/firefly detail.jpg)
