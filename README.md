@@ -9,4 +9,4 @@ Video
 
 Each firefly consists of twelve green SMD LEDs, Charlieplexed on four thin enamelled wires. The five fireflies are controlled by an Arduino Nano hidden in the lid. A piezo sensor under the lid detects taps.
 
-![Firefly detail](images/firefly detail.jpg)
+![Firefly detail](https://github.com/tangentmonger/fireflyjar/blob/master/images/firefly%20detail.jpg?raw=true)
