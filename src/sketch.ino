@@ -30,6 +30,7 @@ int knock_sensor = A6; // piezo sensor with large resistor in parallel
 int KNOCK_THRESHOLD = 100;
 
 #define NUM_FIREFLIES 5
+#define TEST_MODE
 
 //                                          blue, green, yellow, red 
 Firefly fireflies[NUM_FIREFLIES] = {Firefly(pin_tx, pin_rx, pin_2, pin_3),
@@ -60,6 +61,8 @@ request led_requests[NUM_FIREFLIES];
 
 void loop() {
 
+#ifndef TEST_MODE
+
     byte knock_value = analogRead(knock_sensor);
     if (knock_value > KNOCK_THRESHOLD) {
         // detected a knock on the jar which frightens all fireflies
@@ -84,6 +87,22 @@ void loop() {
     }
 
     delay(5); //milliseconds. Loads of time to service ISRs, probably?
+
+
+#else
+
+    // for testing, just keep invoking firefly 1 on pins 4-7
+    fireflies[1].frighten();  // nothing will happen if it's already singing
+
+    // collect LED PWM requests for all fireflies
+    for(int i=0; i<NUM_FIREFLIES; i++) {
+        fireflies[i].update();
+        led_requests[i] = fireflies[i].get_led_request();
+    }
+
+    delay(5); //service ISRs
+
+#endif
 
 }
 
