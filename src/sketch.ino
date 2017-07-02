@@ -29,15 +29,11 @@ pin_port pin_A5 = {0,0b00100000,0};
 int knock_sensor = A6; // piezo sensor with large resistor in parallel
 int KNOCK_THRESHOLD = 100;
 
-#define NUM_FIREFLIES 5
+#define NUM_FIREFLIES 1
 #define TEST_MODE
 
 //                                          blue, green, yellow, red 
-Firefly fireflies[NUM_FIREFLIES] = {Firefly(pin_tx, pin_rx, pin_2, pin_3),
-                                    Firefly(pin_4, pin_5, pin_6, pin_7),
-                                    Firefly(pin_8, pin_9, pin_10, pin_11),
-                                    Firefly(pin_12, pin_13, pin_A0, pin_A1),
-                                    Firefly(pin_A2, pin_A3, pin_A4, pin_A5)};
+Firefly fireflies[NUM_FIREFLIES] = {Firefly(pin_4, pin_5, pin_6, pin_7, pin_8)};
 
 
 void setup() {
@@ -50,7 +46,7 @@ void setup() {
     TCNT1  = 0; //reset timer value to 0
 
     // timer interrupts at roughly 10kHz
-    OCR1A = 6;                // compare match register 16MHz/256/10kHz
+    OCR1A = 3;                // compare match register 16MHz/256/10kHz
     TCCR1B |= (1 << WGM12);   // CTC mode (clear timer when it matches)
     TCCR1B |= (1 << CS12);    // 256 prescaler 
     TIMSK1 |= (1 << OCIE1A);  // enable timer compare interrupt
@@ -92,7 +88,7 @@ void loop() {
 #else
 
     // for testing, just keep invoking firefly 1 on pins 4-7
-    fireflies[1].frighten();  // nothing will happen if it's already singing
+    fireflies[0].frighten();  // nothing will happen if it's already singing
 
     // collect LED PWM requests for all fireflies
     for(int i=0; i<NUM_FIREFLIES; i++) {

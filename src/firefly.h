@@ -2,7 +2,7 @@
 #define FIREFLY
 #include "firefly_structs.h"
 
-#define LED_COUNT 12
+#define LED_COUNT 20
 #define STANDARD_MAX_TIREDNESS 200 //in cycles of 5ms each
 #define FRIGHTENED_MAX_TIREDNESS 800 //in cycles of 5ms each
 #define MAX_HESITATION 50 // in cycles of 5ms each
@@ -13,7 +13,7 @@ Represents one hardware firefly with LED_COUNT LEDs.
 */
     public:
         // Constructor. Supply the pins connected to each of the four wires.
-        Firefly(pin_port blue_wire, pin_port green_wire, pin_port yellow_wire, pin_port red_wire);
+        Firefly(pin_port blue_wire, pin_port green_wire, pin_port yellow_wire, pin_port red_wire, pin_port white_wire);
 
         // Update regularly to allow firefly to progress songs, etc
         void update();

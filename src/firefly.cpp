@@ -15,7 +15,7 @@
 #define STATE_EXHAUSTED 4
 #define STATE_HESITATING 5
 
-Firefly::Firefly(pin_port blue_wire, pin_port green_wire, pin_port yellow_wire, pin_port red_wire)
+Firefly::Firefly(pin_port blue_wire, pin_port green_wire, pin_port yellow_wire, pin_port red_wire, pin_port white_wire)
 {
     // Represents one firefly with 12 LEDs. Controls its song and builds requests for
     // LEDs to be lit.
@@ -24,23 +24,36 @@ Firefly::Firefly(pin_port blue_wire, pin_port green_wire, pin_port yellow_wire, 
     _led_request = {NULL_LED, 0, NULL_LED ,0};
     _state = STATE_READY;
     
-    _led_wirings[0] = {blue_wire, red_wire};
-    _led_wirings[1] = {red_wire, blue_wire};
+    _led_wirings[5] = {blue_wire, red_wire};
+    _led_wirings[4] = {red_wire, blue_wire};
 
-    _led_wirings[2] = {green_wire, red_wire};
-    _led_wirings[3] = {red_wire, green_wire};
+    _led_wirings[3] = {green_wire, red_wire};
+    _led_wirings[2] = {red_wire, green_wire};
     
-    _led_wirings[4] = {yellow_wire, red_wire};
-    _led_wirings[5] = {red_wire, yellow_wire};
+    _led_wirings[10] = {yellow_wire, red_wire};
+    _led_wirings[11] = {red_wire, yellow_wire};
     
-    _led_wirings[6] = {yellow_wire, green_wire};
-    _led_wirings[7] = {green_wire, yellow_wire};
+    _led_wirings[0] = {yellow_wire, green_wire};
+    _led_wirings[1] = {green_wire, yellow_wire};
     
-    _led_wirings[8] = {blue_wire, green_wire};
-    _led_wirings[9] = {green_wire, blue_wire};
+    _led_wirings[15] = {blue_wire, green_wire};
+    _led_wirings[14] = {green_wire, blue_wire};
     
-    _led_wirings[10] = {blue_wire, yellow_wire};
-    _led_wirings[11] = {yellow_wire, blue_wire};
+    _led_wirings[13] = {blue_wire, yellow_wire};
+    _led_wirings[12] = {yellow_wire, blue_wire};
+
+    _led_wirings[7] = {blue_wire, white_wire};
+    _led_wirings[6] = {white_wire, blue_wire};
+
+    _led_wirings[16] = {green_wire, white_wire};
+    _led_wirings[17] = {white_wire, green_wire};
+    
+    _led_wirings[18] = {yellow_wire, white_wire};
+    _led_wirings[19] = {white_wire, yellow_wire};
+    
+    _led_wirings[9] = {red_wire, white_wire};
+    _led_wirings[8] = {white_wire, red_wire};
+    
 }
 
 void Firefly::update() {
@@ -63,6 +76,8 @@ void Firefly::update() {
             // adjust brightness
             //float brightness = _convert_brightness(_brightness);
             float brightness = _brightness;
+            //float brightness = 100;
+
 
             // 1) which LEDs do we light?
             float virtual_led = float(LED_COUNT-1) * position / 100.0;
