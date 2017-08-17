@@ -4,8 +4,8 @@
 
 #define LED_COUNT 12
 #define STANDARD_MAX_TIREDNESS 200 //in cycles of 5ms each
-#define FRIGHTENED_MAX_TIREDNESS 800 //in cycles of 5ms each
-#define MAX_HESITATION 50 // in cycles of 5ms each
+#define FRIGHTENED_MAX_TIREDNESS 200 //in cycles of 5ms each
+#define MAX_HESITATION 30 // in cycles of 5ms each
 
 class Firefly {
 /*

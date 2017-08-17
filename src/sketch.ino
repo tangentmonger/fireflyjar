@@ -30,7 +30,7 @@ int knock_sensor = A6; // piezo sensor with large resistor in parallel
 int KNOCK_THRESHOLD = 100;
 
 #define NUM_FIREFLIES 5
-#define TEST_MODE
+//#define TEST_MODE
 
 //                                          blue, green, yellow, red 
 Firefly fireflies[NUM_FIREFLIES] = {Firefly(pin_tx, pin_rx, pin_2, pin_3),
@@ -49,12 +49,19 @@ void setup() {
     TCCR1B = 0;
     TCNT1  = 0; //reset timer value to 0
 
+#ifndef TEST_MODE
     // timer interrupts at roughly 10kHz
     OCR1A = 6;                // compare match register 16MHz/256/10kHz
+#else
+    // timer interrupts more slowly, for testing
+    OCR1A = 1;                // compare match register 16MHz/256/10kHz
+#endif
     TCCR1B |= (1 << WGM12);   // CTC mode (clear timer when it matches)
     TCCR1B |= (1 << CS12);    // 256 prescaler 
     TIMSK1 |= (1 << OCIE1A);  // enable timer compare interrupt
     interrupts();             // enable all interrupts
+
+    //Serial.begin(9600);
 }
 
 request led_requests[NUM_FIREFLIES];
@@ -64,6 +71,7 @@ void loop() {
 #ifndef TEST_MODE
 
     byte knock_value = analogRead(knock_sensor);
+    //Serial.println(knock_value);
     if (knock_value > KNOCK_THRESHOLD) {
         // detected a knock on the jar which frightens all fireflies
         // into flying at once
