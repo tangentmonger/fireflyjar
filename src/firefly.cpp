@@ -26,6 +26,7 @@ Firefly::Firefly(pin_port blue_wire, pin_port green_wire, pin_port yellow_wire, 
    
     // Wirings match v4 PCB
     //             LED +ve.......... -ve  
+    // Top (head)
     _led_wirings[0] = {red_wire,     blue_wire};
     _led_wirings[1] = {blue_wire,    red_wire};
 
@@ -43,6 +44,7 @@ Firefly::Firefly(pin_port blue_wire, pin_port green_wire, pin_port yellow_wire, 
     
     _led_wirings[10] = {yellow_wire, blue_wire};
     _led_wirings[11] = {blue_wire,   yellow_wire};
+    // Bottom (tail)
 }
 
 void Firefly::update() {
