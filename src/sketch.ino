@@ -30,7 +30,7 @@ int knock_sensor = A6; // piezo sensor with large resistor in parallel
 int KNOCK_THRESHOLD = 100;
 
 #define NUM_FIREFLIES 5
-//#define TEST_MODE
+#define TEST_MODE
 
 //                                          blue, green, yellow, red 
 Firefly fireflies[NUM_FIREFLIES] = {Firefly(pin_tx, pin_rx, pin_2, pin_3),
@@ -45,19 +45,15 @@ void setup() {
     
     // initialize timer1, used to run PWM on firefly LEDs
     noInterrupts();           // disable all interrupts
-    TCCR1A = 0;
-    TCCR1B = 0;
-    TCNT1  = 0; //reset timer value to 0
+    TCCR1A = 0; // timer modes off etc
+    TCCR1B = 0; // timer stopped
+    TCNT1  = 0; // reset timer value to 0
 
-#ifndef TEST_MODE
     // timer interrupts at roughly 10kHz
-    OCR1A = 6;                // compare match register 16MHz/256/10kHz
-#else
-    // timer interrupts more slowly, for testing
-    OCR1A = 1;                // compare match register 16MHz/256/10kHz
-#endif
+    // speed: 16MHz (atmega328) / 256 (prescaler) / 6 (counter match) = 10416Hz
+    OCR1A = 0x0006;           // value to match
     TCCR1B |= (1 << WGM12);   // CTC mode (clear timer when it matches)
-    TCCR1B |= (1 << CS12);    // 256 prescaler 
+    TCCR1B |= (1 << CS12);    // set prescaler to 256
     TIMSK1 |= (1 << OCIE1A);  // enable timer compare interrupt
     interrupts();             // enable all interrupts
 
@@ -88,13 +84,13 @@ void loop() {
         }
     }
 
-    // collect LED PWM requests for all fireflies
+    // collect LED 'position' requests for all fireflies
     for(int i=0; i<NUM_FIREFLIES; i++) {
         fireflies[i].update();
         led_requests[i] = fireflies[i].get_led_request();
     }
 
-    delay(5); //milliseconds. Loads of time to service ISRs, probably?
+    delay(5); //milliseconds. Service ISRs (for PWM) until next LED 'position' update.
 
 
 #else
@@ -102,13 +98,11 @@ void loop() {
     // for testing, just keep invoking firefly 1 on pins 4-7
     fireflies[1].frighten();  // nothing will happen if it's already singing
 
-    // collect LED PWM requests for all fireflies
-    for(int i=0; i<NUM_FIREFLIES; i++) {
-        fireflies[i].update();
-        led_requests[i] = fireflies[i].get_led_request();
-    }
+    // collect LED 'position' requests for all fireflies
+    fireflies[1].update();
+    led_requests[1] = fireflies[1].get_led_request();
 
-    delay(5); //service ISRs
+    delay(30); //milliseconds. Service ISRs (for PWM) until next LED 'position' update.
 
 #endif
 
