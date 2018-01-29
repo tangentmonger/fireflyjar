@@ -30,7 +30,7 @@ int knock_sensor = A6; // piezo sensor with large resistor in parallel
 int KNOCK_THRESHOLD = 100;
 
 #define NUM_FIREFLIES 5
-#define TEST_MODE
+// #define TEST_MODE
 
 //                                          blue, green, yellow, red 
 Firefly fireflies[NUM_FIREFLIES] = {Firefly(pin_tx, pin_rx, pin_2, pin_3),
