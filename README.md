@@ -21,13 +21,13 @@ Green fireflies, [soldered directly onto enamelled wire](images/v1/firefly%20det
 v2
 --
 
-Yellow-green fireflies on [flexible PCBs](images/v2/firefly%20flex%201.jpeg?raw=true). There's an [Instructable](https://www.instructables.com/id/Jar-of-Fireflies-animated/) for this version.
+Yellow-green fireflies on [flexible PCBs](images/v2/firefly%20flex%201.jpeg?raw=true). Here's an [Instructable](https://www.instructables.com/id/Jar-of-Fireflies-animated/) for this version.
 
 [![Jar of Fireflies, v2](https://i.vimeocdn.com/video/651984544_780x439.jpg)](https://vimeo.com/231225309)
 
 [Video of jar](https://vimeo.com/231225309)
 
-[Video of single firefly](https://i.vimeocdn.com/video/651984995.jpg)
+[Video of single firefly](https://vimeo.com/231225647)
 
 
 v3
